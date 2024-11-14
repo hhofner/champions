@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" class="[scrollbar-gutter:stable]">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <.live_title suffix=" · Phoenix Framework">
+      <%= assigns[:page_title] || "Champions" %>
+    </.live_title>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
+    </script>
+  </head>
+  <body class="bg-white antialiased flex flex-col min-h-screen">
+    <header class="bg-base-200 flex justify-between items-center p-4 sticky top-0">
+      <.link href={~p"/"} class="text-2xl font-bold">Champions</.link>
+      <ul class="relative z-10 flex items-center gap-4 justify-end">
+      <%= if @current_user do %>
+        <li>
+          <%= @current_user.email %>
+        </li>
+        <li>
+          <.link
+            href={~p"/users/settings"}
+            class="link"
+          >
+            Settings
+          </.link>
+        </li>
+        <li>
+          <.link
+            href={~p"/users/log_out"}
+            method="delete"
+            class="link"
+          >
+            Log out
+          </.link>
+        </li>
+      <% else %>
+        <li>
+          <.link
+            href={~p"/users/register"}
+            class="link"
+          >
+            Register
+          </.link>
+        </li>
+        <li>
+          <.link
+            href={~p"/users/log_in"}
+            class="link"
+          >
+            Log in
+          </.link>
+        </li>
+      <% end %>
+      </ul>
+    </header>
+    <%= @inner_content %>
+    <footer class="footer footer-center bg-base-300 text-base-content p-4">
+      <aside>
+        <p>Copyright © 2024 - All right reserved by <span class="font-bold">hofner.tech</span></p>
+      </aside>
+    </footer>
+  </body>
+</html>
