@@ -5,6 +5,8 @@ defmodule Champions.Groups do
 
   import Ecto.Query, warn: false
   alias Champions.Repo
+  alias Champions.Groups.GroupMembership
+  alias Champions.Accounts.User
 
   alias Champions.Groups.Group
 
@@ -22,10 +24,34 @@ defmodule Champions.Groups do
   end
 
   @doc """
+  Returns the list of groups that a given user is admin of.
+  """
+  def list_groups_admined_by_user(user_id) do
+    Repo.all(from g in Group, where: g.owner == ^user_id)
+  end
+
+  @doc """
   Returns the list of groups for a given user.
   """
   def list_groups_for_user(user_id) do
-    Repo.all(from g in Group, where: g.owner == ^user_id)
+    Repo.all(
+      from g in Group,
+        join: gm in GroupMembership,
+        on: g.id == gm.group_id,
+        where: gm.user_id == ^user_id
+    )
+  end
+
+  @doc """
+  Returns list users in group
+  """
+  def list_group_members(group_id) do
+    Repo.all(
+      from u in User,
+        join: gm in GroupMembership,
+        on: u.id == gm.user_id,
+        where: gm.group_id == ^group_id
+    )
   end
 
   @doc """
@@ -63,15 +89,15 @@ defmodule Champions.Groups do
   end
 
   def create_group_with_user(attrs \\ %{}, user_id) do
-    Repo.transaction(fn -> 
-      {:ok, group} = 
+    Repo.transaction(fn ->
+      {:ok, group} =
         create_group(attrs)
 
-      {:ok, _group_membership} = 
+      {:ok, _group_membership} =
         create_group_membership(%{
-          group_id: group.id, 
+          group_id: group.id,
           user_id: user_id,
-          role: "weirdo",
+          role: "weirdo"
         })
     end)
   end
