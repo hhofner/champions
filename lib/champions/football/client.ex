@@ -7,11 +7,14 @@ defmodule Champions.Football.Client do
   defp client do
     middleware = [
       {Tesla.Middleware.BaseUrl, @base_url},
-      {Tesla.Middleware.Headers, [
-        {"x-rapidapi-key", api_key()}, # this comes from the .env file
-        {"x-rapidapi-host", api_host()}, # this comes from the .env file
-        {"Content-Type", "application/json"}
-      ]},
+      {Tesla.Middleware.Headers,
+       [
+         # this comes from the .env file
+         {"x-rapidapi-key", api_key()},
+         # this comes from the .env file
+         {"x-rapidapi-host", api_host()},
+         {"Content-Type", "application/json"}
+       ]},
       Tesla.Middleware.JSON
     ]
 
@@ -26,6 +29,25 @@ defmodule Champions.Football.Client do
     client()
     |> Tesla.get("/v3/fixtures", query: [league: league_id, season: season])
     |> handle_response()
+  end
+
+  @spec get_current_matchday_fixtures(String.t(), String.t()) :: {:ok, any()} | {:error, any()}
+  def get_current_matchday_fixtures(league_id, season) do
+    with {:ok, response} <-
+           client()
+           |> Tesla.get("/v3/fixtures/rounds",
+             query: [league: league_id, season: season, current: true]
+           )
+           |> handle_response(),
+         current_matchday = response["response"] |> Enum.at(0),
+         {:ok, fixtures} <-
+           client()
+           |> Tesla.get("/v3/fixtures",
+             query: [league: league_id, season: season, round: current_matchday]
+           )
+           |> handle_response() do
+      {:ok, fixtures}
+    end
   end
 
   @spec get_standings(String.t(), String.t()) :: {:ok, any()} | {:error, any()}

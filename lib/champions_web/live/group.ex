@@ -10,16 +10,25 @@ defmodule ChampionsWeb.GroupLive do
     group = Champions.Groups.get_group!(group_id)
     league_name = Champions.Games.get_league!(group.league_id).name
 
+    # get current year in the format of "YYYY"
+    current_year = DateTime.utc_now().year
+    IO.inspect(current_year, label: "current_year")
+
+    IO.inspect(group, label: "group")
+    {:ok, fixtures} = Champions.Games.list_matches_current(group.league_id, current_year)
+
     {:ok,
      assign(socket,
        group: group,
        group_members: group_members,
        is_not_current_member: is_not_current_member,
        league_name: league_name,
-       user_id: user.id
+       user_id: user.id,
+       fixtures: fixtures
      )}
   end
 
+  @impl true
   def handle_event("join_group", _value, socket) do
     user_id = socket.assigns.user_id
     group_id = socket.assigns.group.id
@@ -64,6 +73,12 @@ defmodule ChampionsWeb.GroupLive do
             <li><%= member.email %></li>
           <% end %>
         </ul>
+      </section>
+      <section>
+        <h2>Current Matchday</h2>
+        <%= for fixture <- @fixtures do %>
+          <li><%= fixture.home_team %> - <%= fixture.away_team %></li>
+        <% end %>
       </section>
     </div>
     """

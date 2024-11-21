@@ -18,8 +18,37 @@ defmodule Champions.Games do
       [%Match{}, ...]
 
   """
-  def list_matches do
-    Repo.all(Match)
+  def list_matches_current(league_id, season) do
+    # matches = Repo.all(Match)
+
+    # if matches == [] do
+    #   case Champions.Football.Client.get_current_matchday_fixtures(league_id, season) do
+    #     {:ok, %{"response" => response}} ->
+    #       Enum.each(response, fn fixture ->
+    #         %Match{}
+    #         |> Match.changeset(fixture["fixture"])
+    #         |> Repo.insert()
+    #       end)
+
+    #     {:error, _} = error ->
+    #       error
+    #   end
+    # end
+    case Champions.Football.Client.get_current_matchday_fixtures(league_id, season) do
+      {:ok, %{"response" => response}} ->
+        IO.inspect(response, label: "response")
+        {:ok, Enum.map(response, &Champions.Football.Fixture.new/1)}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Returns list of current day matches.
+  """
+  def list_current_day_matches do
+    Repo.all(from m in Match, where: m.date == ^Date.utc_today())
   end
 
   @doc """
@@ -116,13 +145,16 @@ defmodule Champions.Games do
   """
   def list_leagues do
     leagues = Repo.all(League)
+
     if leagues == [] do
       {:ok, leagues} = Champions.Football.list_leagues()
+
       leagues
       |> Enum.map(&Map.from_struct/1)
       |> Enum.map(&Champions.Games.League.changeset(%League{}, &1))
       |> Enum.each(&Repo.insert!/1)
     end
+
     query = from(l in League, limit: 10)
     Repo.all(query)
   end

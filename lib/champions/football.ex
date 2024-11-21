@@ -25,8 +25,11 @@ defmodule Champions.Football do
   """
   def list_leagues do
     case Client.get_leagues() do
-      {:ok, %{"response" => leagues}} -> {:ok, Enum.map(leagues, &League.new/1)}
-      error -> error
+      {:ok, %{"response" => leagues}} ->
+        {:ok, Enum.map(leagues, &League.new/1)}
+
+      error ->
+        error
     end
   end
 

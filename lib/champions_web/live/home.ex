@@ -27,10 +27,12 @@ defmodule ChampionsWeb.HomeLive do
     {:ok, socket}
   end
 
+  @impl true
   def handle_event("toggle_create_group_modal", _params, socket) do
     {:noreply, update(socket, :show_create_group_modal, &(!&1))}
   end
 
+  @impl true
   def handle_event("create_new_group", %{"group" => group_params}, socket) do
     user_id = socket.assigns.current_user_id
 
