@@ -8,24 +8,34 @@ defmodule ChampionsWeb.GroupLive do
     is_not_current_member = !Enum.member?(group_members, user)
 
     group = Champions.Groups.get_group!(group_id)
-    league_name = Champions.Games.get_league!(group.league_id).name
+    league = Champions.Games.get_league!(group.league_id)
 
     # get current year in the format of "YYYY"
     current_year = DateTime.utc_now().year
-    IO.inspect(current_year, label: "current_year")
 
-    IO.inspect(group, label: "group")
-    {:ok, fixtures} = Champions.Games.list_matches_current(group.league_id, current_year)
+    case Champions.Games.list_matches_current(league.external_league_id, current_year) do
+      {:ok, fixtures} ->
+        {:ok,
+         assign(socket,
+           group: group,
+           group_members: group_members,
+           is_not_current_member: is_not_current_member,
+           league_name: league.name,
+           user_id: user.id,
+           fixtures: fixtures
+         )}
 
-    {:ok,
-     assign(socket,
-       group: group,
-       group_members: group_members,
-       is_not_current_member: is_not_current_member,
-       league_name: league_name,
-       user_id: user.id,
-       fixtures: fixtures
-     )}
+      {:error, error} ->
+        {:ok,
+         assign(socket,
+           group: group,
+           group_members: group_members,
+           is_not_current_member: is_not_current_member,
+           league_name: league.name,
+           user_id: user.id,
+           fixtures: []
+         )}
+    end
   end
 
   @impl true

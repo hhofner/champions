@@ -1,4 +1,5 @@
 # lib/football.ex
+# TODO: Delete this module
 defmodule Champions.Football do
   @moduledoc """
   The Football context - this is the public API for football-related operations
@@ -15,20 +16,6 @@ defmodule Champions.Football do
         {:ok, Enum.map(fixtures, &Fixture.new/1)}
 
       {:error, _} = error ->
-        error
-    end
-  end
-
-  @doc """
-  Gets a list of leagues.
-  Returns a list of League structs.
-  """
-  def list_leagues do
-    case Client.get_leagues() do
-      {:ok, %{"response" => leagues}} ->
-        {:ok, Enum.map(leagues, &League.new/1)}
-
-      error ->
         error
     end
   end

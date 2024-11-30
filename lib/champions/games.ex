@@ -36,11 +36,11 @@ defmodule Champions.Games do
     # end
     case Champions.Football.Client.get_current_matchday_fixtures(league_id, season) do
       {:ok, %{"response" => response}} ->
-        IO.inspect(response, label: "response")
         {:ok, Enum.map(response, &Champions.Football.Fixture.new/1)}
 
-      error ->
-        error
+      {:error, error} ->
+        IO.inspect(error, label: "error")
+        {:error, error}
     end
   end
 
@@ -147,7 +147,7 @@ defmodule Champions.Games do
     leagues = Repo.all(League)
 
     if leagues == [] do
-      {:ok, leagues} = Champions.Football.list_leagues()
+      {:ok, leagues} = Champions.Football.League.list_leagues()
 
       leagues
       |> Enum.map(&Map.from_struct/1)
@@ -238,5 +238,16 @@ defmodule Champions.Games do
   """
   def change_league(%League{} = league, attrs \\ %{}) do
     League.changeset(league, attrs)
+  end
+
+  @doc """
+  """
+  def update_leagues() do
+    with {:ok, leagues} <- Champions.Football.League.list_leagues() do
+      leagues
+      |> Enum.map(&Map.from_struct/1)
+      |> Enum.map(&Champions.Games.League.changeset(%League{}, &1))
+      |> Enum.each(&Repo.insert!/1)
+    end
   end
 end
