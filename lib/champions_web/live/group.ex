@@ -88,23 +88,34 @@ defmodule ChampionsWeb.GroupLive do
           <% end %>
         </ul>
       </section>
-      <section>
-        <h2 class="text-lg font-semibold">Current Matchday</h2>
-        <ul class="flex gap-5 flex-wrap">
+      <section class="p-4">
+        <h2 class="text-lg font-semibold mb-4">Current Matchday</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <%= for fixture <- @fixtures do %>
-            <li class="">
-              <h3><%= fixture.home_team %> - <%= fixture.away_team %></h3>
-              <div>
-                <h4>Your prediction:</h4>
-                <div>
-                  <input type="text" class="input input-bordered w-12" placeholder="0" />
-                  <span>-</span>
-                  <input type="text" class="input input-bordered w-12" placeholder="0" />
+            <div class="border rounded-lg p-4 shadow-sm">
+              <div class="flex flex-col space-y-3">
+                <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                  <div class="text-right truncate" title={fixture.home_team}>
+                    <%= fixture.home_team %>
+                  </div>
+                  <div class="font-bold">vs</div>
+                  <div class="truncate" title={fixture.away_team}>
+                    <%= fixture.away_team %>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <h4 class="text-sm font-medium text-gray-600">Your prediction:</h4>
+                  <div class="flex items-center justify-center gap-2">
+                    <input type="text" class="input input-bordered w-16 text-center" placeholder="0" />
+                    <span class="font-bold">-</span>
+                    <input type="text" class="input input-bordered w-16 text-center" placeholder="0" />
+                  </div>
                 </div>
               </div>
-            </li>
+            </div>
           <% end %>
-        </ul>
+        </div>
       </section>
     </div>
     """
