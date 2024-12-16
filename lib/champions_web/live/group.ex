@@ -13,8 +13,12 @@ defmodule ChampionsWeb.GroupLive do
     # get current year in the format of "YYYY"
     current_year = DateTime.utc_now().year
 
+    IO.inspect(league, label: "league")
+
     case Champions.Games.list_matches_current(league.external_league_id, current_year) do
       {:ok, fixtures} ->
+        IO.inspect(fixtures, label: "fixtures")
+
         {:ok,
          assign(socket,
            group: group,
@@ -85,10 +89,22 @@ defmodule ChampionsWeb.GroupLive do
         </ul>
       </section>
       <section>
-        <h2>Current Matchday</h2>
-        <%= for fixture <- @fixtures do %>
-          <li><%= fixture.home_team %> - <%= fixture.away_team %></li>
-        <% end %>
+        <h2 class="text-lg font-semibold">Current Matchday</h2>
+        <ul class="flex gap-5 flex-wrap">
+          <%= for fixture <- @fixtures do %>
+            <li class="">
+              <h3><%= fixture.home_team %> - <%= fixture.away_team %></h3>
+              <div>
+                <h4>Your prediction:</h4>
+                <div>
+                  <input type="text" class="input input-bordered w-12" placeholder="0" />
+                  <span>-</span>
+                  <input type="text" class="input input-bordered w-12" placeholder="0" />
+                </div>
+              </div>
+            </li>
+          <% end %>
+        </ul>
       </section>
     </div>
     """

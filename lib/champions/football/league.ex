@@ -6,7 +6,6 @@ defmodule Champions.Football.League do
   def new(attrs) do
     # WOuld it make more sense to just return a Map?
     %__MODULE__{
-      id: attrs["league"]["id"],
       name: attrs["league"]["name"],
       country: attrs["country"]["name"],
       logo: attrs["league"]["logo"],

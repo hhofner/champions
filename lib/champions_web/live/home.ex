@@ -57,7 +57,7 @@ defmodule ChampionsWeb.HomeLive do
 
   def create_league_options(leagues) do
     leagues
-    |> Enum.map(&{&1.name, &1.id})
+    |> Enum.map(&{&1.name, &1.external_league_id})
   end
 
   @impl true

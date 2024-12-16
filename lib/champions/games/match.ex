@@ -9,7 +9,13 @@ defmodule Champions.Games.Match do
     field :away_team, :string
     field :home_score, :string
     field :away_score, :string
-    field :league_id, :id
+
+    belongs_to :league, Champions.Games.League,
+      foreign_key: :league_id,
+      references: :external_league_id,
+      type: :integer
+
+    field :season, :integer
 
     timestamps(type: :utc_datetime)
   end
@@ -17,7 +23,25 @@ defmodule Champions.Games.Match do
   @doc false
   def changeset(match, attrs) do
     match
-    |> cast(attrs, [:external_id, :date, :home_team, :away_team, :home_score, :away_score])
-    |> validate_required([:external_id, :date, :home_team, :away_team, :home_score, :away_score])
+    |> cast(attrs, [
+      :external_id,
+      :date,
+      :home_team,
+      :away_team,
+      :home_score,
+      :away_score,
+      :season,
+      :league_id
+    ])
+    |> validate_required([
+      :external_id,
+      :date,
+      :home_team,
+      :away_team,
+      :home_score,
+      :away_score,
+      :season,
+      :league_id
+    ])
   end
 end

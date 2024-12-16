@@ -60,7 +60,8 @@ defmodule Champions.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:tesla, "~> 1.11"},
-      {:dotenv, "~> 3.0.0", only: [:dev, :test]}
+      {:dotenv, "~> 3.0.0", only: [:dev, :test]},
+      {:ecto_erd, "~> 0.6", only: :dev}
     ]
   end
 

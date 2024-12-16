@@ -6,7 +6,7 @@ defmodule Champions.Predictions.Prediction do
     field :predicted_home_score, :integer
     field :predicted_away_score, :integer
     field :user_id, :id
-    field :match_id, :id
+    belongs_to :match, Champions.Games.Match
 
     timestamps(type: :utc_datetime)
   end

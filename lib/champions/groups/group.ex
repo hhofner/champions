@@ -4,7 +4,12 @@ defmodule Champions.Groups.Group do
 
   schema "groups" do
     field :name, :string
-    field :league_id, :id
+
+    belongs_to :league, Champions.Games.League,
+      foreign_key: :league_id,
+      references: :external_league_id,
+      type: :integer
+
     field :owner, :id
 
     timestamps(type: :utc_datetime)

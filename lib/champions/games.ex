@@ -18,29 +18,39 @@ defmodule Champions.Games do
       [%Match{}, ...]
 
   """
+
   def list_matches_current(league_id, season) do
-    # matches = Repo.all(Match)
+    IO.inspect(league_id, label: "league_id")
+    query = from(m in Match, where: m.league_id == ^league_id and m.season == ^season)
 
-    # if matches == [] do
-    #   case Champions.Football.Client.get_current_matchday_fixtures(league_id, season) do
-    #     {:ok, %{"response" => response}} ->
-    #       Enum.each(response, fn fixture ->
-    #         %Match{}
-    #         |> Match.changeset(fixture["fixture"])
-    #         |> Repo.insert()
-    #       end)
+    case Repo.all(query) do
+      [] ->
+        with {:ok, fixtures} <- Champions.Football.Fixture.list_fixtures(league_id, season) do
+          fixtures
+          |> Enum.map(fn fixture ->
+            %{
+              date: fixture.date,
+              home_team: fixture.home_team,
+              away_team: fixture.away_team,
+              home_score: "-",
+              away_score: "-",
+              status: fixture.status,
+              season: season,
+              league_id: league_id,
+              # Convert ID to string if needed
+              external_id: to_string(fixture.id)
+            }
+          end)
+          |> Enum.map(&Match.changeset(%Match{}, &1))
+          |> Enum.each(&Repo.insert!/1)
 
-    #     {:error, _} = error ->
-    #       error
-    #   end
-    # end
-    case Champions.Football.Client.get_current_matchday_fixtures(league_id, season) do
-      {:ok, %{"response" => response}} ->
-        {:ok, Enum.map(response, &Champions.Football.Fixture.new/1)}
+          {:ok, Repo.all(query)}
+        else
+          {:error, _} = error -> {:error, error}
+        end
 
-      {:error, error} ->
-        IO.inspect(error, label: "error")
-        {:error, error}
+      matches ->
+        {:ok, matches}
     end
   end
 
@@ -151,7 +161,7 @@ defmodule Champions.Games do
 
       leagues
       |> Enum.map(&Map.from_struct/1)
-      |> Enum.map(&Champions.Games.League.changeset(%League{}, &1))
+      |> Enum.map(&League.changeset(%League{}, &1))
       |> Enum.each(&Repo.insert!/1)
     end
 
