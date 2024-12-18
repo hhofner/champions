@@ -20,7 +20,6 @@ defmodule Champions.Games do
   """
 
   def list_matches_current(league_id, season) do
-    IO.inspect(league_id, label: "league_id")
     query = from(m in Match, where: m.league_id == ^league_id and m.season == ^season)
 
     case Repo.all(query) do

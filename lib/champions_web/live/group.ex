@@ -13,12 +13,8 @@ defmodule ChampionsWeb.GroupLive do
     # get current year in the format of "YYYY"
     current_year = DateTime.utc_now().year
 
-    IO.inspect(league, label: "league")
-
     case Champions.Games.list_matches_current(league.external_league_id, current_year) do
       {:ok, fixtures} ->
-        IO.inspect(fixtures, label: "fixtures")
-
         {:ok,
          assign(socket,
            group: group,
@@ -66,9 +62,28 @@ defmodule ChampionsWeb.GroupLive do
     end
   end
 
+  def handle_event(
+        "update_prediction",
+        %{"_target" => [team], "away-team" => away_team, "home-team" => home_team} = params,
+        socket
+      ) do
+    IO.inspect(params, label: "All params")
+    IO.inspect(home_team, label: "home_team")
+    IO.inspect(away_team, label: "away_team")
+
+    {:noreply, socket}
+  end
+
+  # Add a catch-all clause to handle partial updates
+  def handle_event("update_prediction", params, socket) do
+    IO.inspect(params, label: "Partial update params")
+    {:noreply, socket}
+  end
+
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <a class="link" href={~p"/home"}>← Back to home</a>
       <header class="flex gap-8 items-center">
         <h1 class="text-2xl font-semibold"><%= @group.name %></h1>
         <div><%= @league_name %></div>
@@ -90,7 +105,7 @@ defmodule ChampionsWeb.GroupLive do
       </section>
       <section class="p-4">
         <h2 class="text-lg font-semibold mb-4">Current Matchday</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <form class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <%= for fixture <- @fixtures do %>
             <div class="border rounded-lg p-4 shadow-sm">
               <div class="flex flex-col space-y-3">
@@ -107,15 +122,29 @@ defmodule ChampionsWeb.GroupLive do
                 <div class="space-y-2">
                   <h4 class="text-sm font-medium text-gray-600">Your prediction:</h4>
                   <div class="flex items-center justify-center gap-2">
-                    <input type="text" class="input input-bordered w-16 text-center" placeholder="0" />
+                    <input
+                      type="text"
+                      class="input input-bordered w-16 text-center"
+                      name="home-team"
+                      placeholder="0"
+                      phx-change="update_prediction"
+                      phx-value-match-id={fixture.id}
+                    />
                     <span class="font-bold">-</span>
-                    <input type="text" class="input input-bordered w-16 text-center" placeholder="0" />
+                    <input
+                      type="text"
+                      class="input input-bordered w-16 text-center"
+                      name="away-team"
+                      placeholder="0"
+                      phx-change="update_prediction"
+                      phx-value-match-id={fixture.id}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           <% end %>
-        </div>
+        </form>
       </section>
     </div>
     """

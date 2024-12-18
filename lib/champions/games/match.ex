@@ -16,6 +16,7 @@ defmodule Champions.Games.Match do
       type: :integer
 
     field :season, :integer
+    has_many :predictions, Champions.Predictions.Prediction
 
     timestamps(type: :utc_datetime)
   end
