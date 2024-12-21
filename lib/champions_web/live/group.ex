@@ -15,6 +15,15 @@ defmodule ChampionsWeb.GroupLive do
 
     case Champions.Games.list_matches_current(league.external_league_id, current_year) do
       {:ok, fixtures} ->
+        fixture_map =
+          Enum.reduce(fixtures, %{}, fn fixture, acc ->
+            acc
+            |> Map.put("#{fixture.id}-home", "")
+            |> Map.put("#{fixture.id}-away", "")
+          end)
+
+        form = to_form(fixture_map)
+
         {:ok,
          assign(socket,
            group: group,
@@ -22,10 +31,13 @@ defmodule ChampionsWeb.GroupLive do
            is_not_current_member: is_not_current_member,
            league_name: league.name,
            user_id: user.id,
-           fixtures: fixtures
+           fixtures: fixtures,
+           form: form
          )}
 
       {:error, error} ->
+        form = to_form(%{})
+
         {:ok,
          assign(socket,
            group: group,
@@ -33,7 +45,8 @@ defmodule ChampionsWeb.GroupLive do
            is_not_current_member: is_not_current_member,
            league_name: league.name,
            user_id: user.id,
-           fixtures: []
+           fixtures: [],
+           form: form
          )}
     end
   end
@@ -105,7 +118,7 @@ defmodule ChampionsWeb.GroupLive do
       </section>
       <section class="p-4">
         <h2 class="text-lg font-semibold mb-4">Current Matchday</h2>
-        <form class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <.simple_form for={@form}>
           <%= for fixture <- @fixtures do %>
             <div class="border rounded-lg p-4 shadow-sm">
               <div class="flex flex-col space-y-3">
@@ -122,29 +135,25 @@ defmodule ChampionsWeb.GroupLive do
                 <div class="space-y-2">
                   <h4 class="text-sm font-medium text-gray-600">Your prediction:</h4>
                   <div class="flex items-center justify-center gap-2">
-                    <input
-                      type="text"
-                      class="input input-bordered w-16 text-center"
+                    <.input
+                      field={@form["#{fixture.id}-home"]}
+                      type="number"
                       name="home-team"
                       placeholder="0"
-                      phx-change="update_prediction"
-                      phx-value-match-id={fixture.id}
                     />
                     <span class="font-bold">-</span>
-                    <input
-                      type="text"
-                      class="input input-bordered w-16 text-center"
-                      name="away-team"
+                    <.input
+                      field={@form["#{fixture.id}-away"]}
+                      type="number"
+                      name="home-team"
                       placeholder="0"
-                      phx-change="update_prediction"
-                      phx-value-match-id={fixture.id}
                     />
                   </div>
                 </div>
               </div>
             </div>
           <% end %>
-        </form>
+        </.simple_form>
       </section>
     </div>
     """
