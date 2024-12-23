@@ -15,14 +15,31 @@ defmodule ChampionsWeb.GroupLive do
 
     case Champions.Games.list_matches_current(league.external_league_id, current_year) do
       {:ok, fixtures} ->
+        predictions =
+          Champions.Predictions.list_matchday_predictions(user.id, Enum.map(fixtures, & &1.id))
+
+        # I want to do something like predictions.find(id => fixture.id)?.predicted_home_score || ""
+
         fixture_map =
           Enum.reduce(fixtures, %{}, fn fixture, acc ->
+            home_score =
+              Enum.find_value(predictions, "", fn pred ->
+                pred.match_id == fixture.id && pred.predicted_home_score
+              end) || ""
+
+            away_score =
+              Enum.find_value(predictions, "", fn pred ->
+                pred.match_id == fixture.id && pred.predicted_away_score
+              end) || ""
+
             acc
-            |> Map.put("#{fixture.id}-home", "")
-            |> Map.put("#{fixture.id}-away", "")
+            |> Map.put("#{fixture.id}-home", home_score)
+            |> Map.put("#{fixture.id}-away", away_score)
           end)
 
         form = to_form(fixture_map)
+
+        IO.inspect(predictions, label: "found predictions")
 
         {:ok,
          assign(socket,
@@ -32,6 +49,7 @@ defmodule ChampionsWeb.GroupLive do
            league_name: league.name,
            user_id: user.id,
            fixtures: fixtures,
+           predictions: predictions,
            form: form
          )}
 
@@ -45,6 +63,7 @@ defmodule ChampionsWeb.GroupLive do
            is_not_current_member: is_not_current_member,
            league_name: league.name,
            user_id: user.id,
+           predictions: [],
            fixtures: [],
            form: form
          )}
@@ -75,22 +94,67 @@ defmodule ChampionsWeb.GroupLive do
     end
   end
 
-  def handle_event(
-        "update_prediction",
-        %{"_target" => [team], "away-team" => away_team, "home-team" => home_team} = params,
-        socket
-      ) do
-    IO.inspect(params, label: "All params")
-    IO.inspect(home_team, label: "home_team")
-    IO.inspect(away_team, label: "away_team")
+  def handle_event("check", params, socket) do
+    %{"_target" => target} = params
+    target_match = Enum.at(target, 0)
+    new_val = params[target_match]
 
-    {:noreply, socket}
-  end
+    match_id = String.split(target_match, "-") |> Enum.at(0) |> String.to_integer()
+    side = String.split(target_match, "-") |> Enum.at(1)
+    user_id = socket.assigns.user_id
 
-  # Add a catch-all clause to handle partial updates
-  def handle_event("update_prediction", params, socket) do
-    IO.inspect(params, label: "Partial update params")
-    {:noreply, socket}
+    prediction =
+      Enum.find(socket.assigns.predictions, fn pred ->
+        # Just compare with the converted match_id
+        pred.match_id == match_id
+      end)
+
+    # Convert new_val to integer if it's not empty
+    new_val = if new_val == "", do: nil, else: String.to_integer(new_val)
+
+    update_attrs =
+      case side do
+        "home" -> %{predicted_home_score: new_val}
+        "away" -> %{predicted_away_score: new_val}
+      end
+
+    case prediction do
+      nil ->
+        full_attrs =
+          case side do
+            "home" ->
+              Map.merge(update_attrs, %{
+                user_id: user_id,
+                match_id: match_id,
+                # Changed from "" to nil
+                predicted_away_score: nil
+              })
+
+            "away" ->
+              Map.merge(update_attrs, %{
+                user_id: user_id,
+                match_id: match_id,
+                # Changed from "" to nil
+                predicted_home_score: nil
+              })
+          end
+
+        case Champions.Predictions.create_prediction(full_attrs) do
+          {:ok, new_prediction} ->
+            predictions = [new_prediction | socket.assigns.predictions]
+            {:noreply, assign(socket, predictions: predictions)}
+
+          {:error, changeset} ->
+            IO.inspect(changeset, label: "creation error")
+            {:noreply, socket}
+        end
+
+      prediction ->
+        case Champions.Predictions.update_prediction(prediction, update_attrs) do
+          {:ok, _} -> {:noreply, socket}
+          {:error, _} -> {:noreply, socket}
+        end
+    end
   end
 
   def render(assigns) do
@@ -118,7 +182,7 @@ defmodule ChampionsWeb.GroupLive do
       </section>
       <section class="p-4">
         <h2 class="text-lg font-semibold mb-4">Current Matchday</h2>
-        <.simple_form for={@form}>
+        <.simple_form for={@form} phx-change="check">
           <%= for fixture <- @fixtures do %>
             <div class="border rounded-lg p-4 shadow-sm">
               <div class="flex flex-col space-y-3">
@@ -137,15 +201,17 @@ defmodule ChampionsWeb.GroupLive do
                   <div class="flex items-center justify-center gap-2">
                     <.input
                       field={@form["#{fixture.id}-home"]}
+                      phx-debounce="blur"
                       type="number"
-                      name="home-team"
+                      name={"#{fixture.id}-home"}
                       placeholder="0"
                     />
                     <span class="font-bold">-</span>
                     <.input
                       field={@form["#{fixture.id}-away"]}
+                      phx-debounce="blur"
                       type="number"
-                      name="home-team"
+                      name={"#{fixture.id}-away"}
                       placeholder="0"
                     />
                   </div>
