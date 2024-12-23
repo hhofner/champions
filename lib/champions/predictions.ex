@@ -22,6 +22,19 @@ defmodule Champions.Predictions do
   end
 
   @doc """
+
+  """
+  def list_matchday_predictions(user_id, matchday_ids) do
+    from(p in Prediction,
+      where: p.user_id == ^user_id and p.match_id in ^matchday_ids,
+      select: p
+    )
+    |> Repo.all()
+  end
+
+  # Alternative
+
+  @doc """
   Gets a single prediction.
 
   Raises `Ecto.NoResultsError` if the Prediction does not exist.
