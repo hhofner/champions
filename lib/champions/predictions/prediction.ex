@@ -14,7 +14,7 @@ defmodule Champions.Predictions.Prediction do
   @doc false
   def changeset(prediction, attrs) do
     prediction
-    |> cast(attrs, [:predicted_home_score, :predicted_away_score])
-    |> validate_required([:predicted_home_score, :predicted_away_score])
+    |> cast(attrs, [:predicted_home_score, :predicted_away_score, :user_id, :match_id])
+    |> validate_required([:user_id, :match_id])
   end
 end
